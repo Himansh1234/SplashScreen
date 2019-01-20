@@ -22,6 +22,7 @@ public class Upload_Adapter extends RecyclerView.Adapter<Upload_Adapter.ViewHold
         this.bitmaps=bitmaps;
         this.recyclerView=recyclerView;
     }
+    //jjj
 
     void update(Bitmap bitmap){
         bitmaps.add(bitmap);
