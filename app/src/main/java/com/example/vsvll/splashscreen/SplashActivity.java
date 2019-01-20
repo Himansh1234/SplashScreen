@@ -14,7 +14,7 @@ public class SplashActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        SystemClock.sleep(2000);
+        SystemClock.sleep(1000);
         Intent intent = new Intent(this, LoginActivity.class);
         startActivity(intent);
         finish();

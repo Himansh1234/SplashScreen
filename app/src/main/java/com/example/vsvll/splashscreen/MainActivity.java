@@ -2,6 +2,7 @@ package com.example.vsvll.splashscreen;
 
 import android.Manifest;
 import android.content.Intent;
+import android.media.Image;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -9,10 +10,13 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.ButtonBarLayout;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -96,6 +100,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+        MenuItem item= menu.findItem(R.id.upload_main);
+
+      ImageButton imageButton = (ImageButton) item.getActionView();
+      imageButton.setBackgroundResource(R.drawable.ic_add_white_24dp);
+      imageButton.setMinimumWidth(120);
+      imageButton.setMaxWidth(120);
+      imageButton.setImageResource(R.drawable.ic_add_white_24dp);
+      imageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent in = new Intent(MainActivity.this,Upload_post.class);
+                startActivity(in);
+            }
+        });
         return true;
     }
 
@@ -105,25 +123,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_logout) {
-
-            mAuth.signOut();
-
-            mGoogleSignInClient.signOut()
-                    .addOnCompleteListener(this, new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                            startActivity(intent);
-                            finishAffinity();
-                            finish();
-                        }
-                    });
-
-
-        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -136,19 +136,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int id = item.getItemId();
 
 
-        if (id == R.id.nav_camera) {
+        if (id == R.id.nav_blood_req) {
             // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-            Intent in = new Intent(MainActivity.this,Upload_post.class);
-            startActivity(in);
+        } else if (id == R.id.nav_event) {
 
-        } else if (id == R.id.nav_slideshow) {
 
-        } else if (id == R.id.nav_manage) {
+        } else if (id == R.id.nav_donation) {
+
+        } else if (id == R.id.nav_profile) {
 
         } else if (id == R.id.nav_share) {
 
-        } else if (id == R.id.nav_send) {
+        } else if (id == R.id.nav_contact) {
+
+        } else if (id == R.id.logout) {
+            mAuth.signOut();
+
+            mGoogleSignInClient.signOut()
+                    .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                            startActivity(intent);
+                            finishAffinity();
+                            finish();
+                        }
+                    });
 
         }
 

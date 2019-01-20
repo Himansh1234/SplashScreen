@@ -5,21 +5,26 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_camera"
-            android:icon="@drawable/ic_menu_camera"
-            android:title="Import" />
-        <item
-            android:id="@+id/nav_gallery"
+            android:id="@+id/nav_event"
             android:icon="@drawable/ic_menu_gallery"
-            android:title="Gallery" />
+            android:title="EVENT" />
         <item
-            android:id="@+id/nav_slideshow"
+            android:id="@+id/nav_blood_req"
+            android:icon="@drawable/ic_menu_camera"
+            android:title="Blood Request" />
+        <item
+            android:id="@+id/nav_donation"
             android:icon="@drawable/ic_menu_slideshow"
-            android:title="Slideshow" />
+            android:title="DONATION" />
         <item
-            android:id="@+id/nav_manage"
+            android:id="@+id/nav_profile"
             android:icon="@drawable/ic_menu_manage"
-            android:title="Tools" />
+            android:title="PROFILE" />
+
+        <item  android:id="@+id/logout"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="LOGOUT"
+            />
     </group>
 
     <item android:title="Communicate">
@@ -29,9 +34,9 @@
                 android:icon="@drawable/ic_menu_share"
                 android:title="Share" />
             <item
-                android:id="@+id/nav_send"
+                android:id="@+id/nav_contact"
                 android:icon="@drawable/ic_menu_send"
-                android:title="Send" />
+                android:title="COUNTACT US" />
         </menu>
     </item>
 
