@@ -127,8 +127,6 @@ public class Upload_post extends AppCompatActivity {
                         Uri contentURI = data.getClipData().getItemAt(i).getUri();
                         try {
                             Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), contentURI);
-                            //Toast.makeText(getApplicationContext(), "Image Saved!", Toast.LENGTH_SHORT).show();
-
                             ((Upload_Adapter) mRecyclerView.getAdapter()).update(bitmap);
                             bitmaps.add(bitmap);
 

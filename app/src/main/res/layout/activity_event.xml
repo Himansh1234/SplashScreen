@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".Event">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="@color/colorPrimary"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/event_date"
+            android:layout_width="200dp"
+            android:layout_height="match_parent"
+            android:layout_marginRight="30dp"
+            android:gravity="center"
+            android:text=""
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/event_calender"
+            android:layout_width="60dp"
+            android:layout_height="match_parent"
+            android:layout_margin="12dp"
+            android:src="@drawable/calender_vector" />
+
+    </LinearLayout>
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/event_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        </android.support.v7.widget.RecyclerView>
+    </ScrollView>
+</LinearLayout>

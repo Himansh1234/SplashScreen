@@ -137,12 +137,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         if (id == R.id.nav_blood_req) {
-            // Handle the camera action
+            Intent intent = new Intent(MainActivity.this, Blood_Donation.class);
+            startActivity(intent);
         } else if (id == R.id.nav_event) {
-
-
+           Intent intent = new Intent(MainActivity.this, Event.class);
+            startActivity(intent);
         } else if (id == R.id.nav_donation) {
-
+            Intent intent = new Intent(MainActivity.this, Donation.class);
+            startActivity(intent);
         } else if (id == R.id.nav_profile) {
 
         } else if (id == R.id.nav_share) {
