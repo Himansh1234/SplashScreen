@@ -21,10 +21,6 @@
             android:icon="@drawable/ic_menu_manage"
             android:title="PROFILE" />
 
-        <item  android:id="@+id/logout"
-            android:icon="@drawable/ic_menu_manage"
-            android:title="LOGOUT"
-            />
     </group>
 
     <item android:title="Communicate">

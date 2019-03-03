@@ -5,7 +5,8 @@ import android.net.Uri;
 public class Event_details {
 
     String name;
-   String uri;
+   String uri,place;
+
 
     public Event_details(String name, String uri) {
         this.name = name;

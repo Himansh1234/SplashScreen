@@ -28,6 +28,8 @@ public class Upload_Adapter extends RecyclerView.Adapter<Upload_Adapter.ViewHold
         bitmaps.add(bitmap);
         notifyDataSetChanged();
     }
+
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {

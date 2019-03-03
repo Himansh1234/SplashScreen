@@ -12,13 +12,59 @@
         android:id="@+id/upload"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="UPLOAD" />
-   <android.support.v7.widget.RecyclerView
-       android:layout_width="match_parent"
-       android:layout_height="match_parent"
-       android:id="@+id/upload_pic_list">
+        android:text="UPLOAD Image" />
 
-   </android.support.v7.widget.RecyclerView>
 
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/upload_pic_list"
+        android:layout_width="match_parent"
+        android:layout_height="300dp">
+
+    </android.support.v7.widget.RecyclerView>
+
+
+    <EditText
+        android:id="@+id/upload_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="TITLE" />
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <EditText
+        android:id="@+id/upload_city"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:hint="City" />
+
+    <Button
+        android:id="@+id/upload_currentlocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="current location"
+        android:layout_gravity="end|right"
+
+        />
+</LinearLayout>
+    <EditText
+        android:id="@+id/upload_address"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Address" />
+
+
+
+    <EditText
+        android:id="@+id/upload_desc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Description" />
+
+    <Button
+        android:id="@+id/upload_post"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center|bottom"
+        android:text="POST" />
 
 </LinearLayout>
