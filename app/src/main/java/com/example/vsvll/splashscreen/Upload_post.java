@@ -39,8 +39,10 @@ import android.widget.Toast;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
@@ -73,10 +75,11 @@ public class Upload_post extends AppCompatActivity implements LocationListener {
     private int GALLERY = 1, CAMERA = 2;
     public int PERMISSIONS_MULTIPLE_REQUEST=1;
 
-    int i,success=1;
+    int i,success=1,inc=1;
     String city = null,userId;
 
-    StorageReference sr = FirebaseStorage.getInstance().getReference();
+    private StorageReference sr = FirebaseStorage.getInstance().getReference();
+    DatabaseReference finalDr = FirebaseDatabase.getInstance().getReference("post");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,7 +115,7 @@ public class Upload_post extends AppCompatActivity implements LocationListener {
         GridLayoutManager mGridLayoutManager = new GridLayoutManager(this, 2);
         mRecyclerView.setLayoutManager(mGridLayoutManager);
 
-        Upload_Adapter myAdapter = new Upload_Adapter(this,mRecyclerView, new ArrayList<Bitmap>());
+        Upload_Adapter myAdapter = new Upload_Adapter(this,mRecyclerView, new ArrayList<Bitmap>(),new ArrayList<Uri>());
         mRecyclerView.setAdapter(myAdapter);
 
         Button uploadPost = findViewById(R.id.upload_post);
@@ -122,7 +125,6 @@ public class Upload_post extends AppCompatActivity implements LocationListener {
             @Override
             public void onClick(View v) {
                 uploadData();
-                uploadImg();
             }
         });
 
@@ -193,8 +195,8 @@ public class Upload_post extends AppCompatActivity implements LocationListener {
                         Uri contentURI = data.getClipData().getItemAt(i).getUri();
                         try {
                             Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), contentURI);
-                            ((Upload_Adapter) mRecyclerView.getAdapter()).update(bitmap);
-                            bitmaps.add(contentURI);
+                            ((Upload_Adapter) mRecyclerView.getAdapter()).update(bitmap,contentURI);
+
 
 
                         } catch (IOException e) {
@@ -210,8 +212,8 @@ public class Upload_post extends AppCompatActivity implements LocationListener {
                     try {
                         Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
                         Toast.makeText(getApplicationContext(), "Image Saved!", Toast.LENGTH_SHORT).show();
-                        ((Upload_Adapter) mRecyclerView.getAdapter()).update(bitmap);
-                        bitmaps.add(uri);
+                        ((Upload_Adapter) mRecyclerView.getAdapter()).update(bitmap,uri);
+
 
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -223,8 +225,8 @@ public class Upload_post extends AppCompatActivity implements LocationListener {
 
         } else if (requestCode == CAMERA) {
             Bitmap thumbnail = (Bitmap) data.getExtras().get("data");
-            ((Upload_Adapter) mRecyclerView.getAdapter()).update(thumbnail);
-            bitmaps.add(data.getData());
+            ((Upload_Adapter) mRecyclerView.getAdapter()).update(thumbnail,data.getData());
+
             Toast.makeText(getApplicationContext(), "Image Saved!", Toast.LENGTH_SHORT).show();
         }
     }
@@ -303,6 +305,8 @@ public class Upload_post extends AppCompatActivity implements LocationListener {
 
 
     void uploadData(){
+
+
         Long ts =(System.currentTimeMillis());
         String timestamp = ts.toString();
         String date = DateFormat.format("dd-MM-yyyy HH:mm",ts).toString();
@@ -332,21 +336,27 @@ public class Upload_post extends AppCompatActivity implements LocationListener {
 
 
 
-       if(name.equals("")||address.equals("")||descp.isEmpty()||city.isEmpty())
+       if(name.equals("")||address.equals("")||descp.isEmpty()||city_t.isEmpty())
        {
            Toast.makeText(getApplicationContext(),"FILL ALL REQUIRED DETAILS",Toast.LENGTH_SHORT).show();
        }
        else {
-           DatabaseReference dr = FirebaseDatabase.getInstance().getReference("post");
-           dr = dr.child(city_t).child(userId).child("detail");
-           dr.child("name").setValue(name);
-           dr.child("desc").setValue(descp);
-           dr.child("time").setValue(date);
-           dr.child("place").setValue(address);
-           dr.child("username").setValue(user.getDisplayName());
-           dr.child("city").setValue(city_t);
-
-
+           if(success==1) {
+               DatabaseReference dr = FirebaseDatabase.getInstance().getReference("post");
+               dr = dr.child(city_t).child(userId).child("detail");
+               dr.child("name").setValue(name);
+               dr.child("desc").setValue(descp);
+               dr.child("time").setValue(date);
+               dr.child("place").setValue(address);
+               dr.child("username").setValue(user.getDisplayName());
+               dr.child("city").setValue(city_t);
+               success=0;
+           }
+           bitmaps.clear();
+           bitmaps = ((Upload_Adapter) mRecyclerView.getAdapter()).getUri();
+           if(bitmaps.size()<=0) {
+               uploadImg();
+           }
        }
 
     }
@@ -355,31 +365,41 @@ public class Upload_post extends AppCompatActivity implements LocationListener {
     void uploadImg(){
 
            final ProgressDialog progress = new ProgressDialog(this);
-           progress.setMessage("Loading ");
+           progress.setMessage("Loading.... ");
            progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
            progress.show();
 
+            finalDr = finalDr.child(city).child(userId).child("img");
 
-           for (i = 0; i < bitmaps.size(); i++) {
-              StorageReference msr = sr.child(userId).child(bitmaps.get(i).getLastPathSegment());
-              // Toast.makeText(getApplicationContext(),bitmaps.get(i).toString(),Toast.LENGTH_SHORT).show();
-
-               msr.putFile(bitmaps.get(i)).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+           for( i=0;i < bitmaps.size();i++) {
+               final StorageReference msr = sr.child(userId).child(bitmaps.get(i).getLastPathSegment());
+           msr.putFile(bitmaps.get(i))
+             .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                    @Override
                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                       Toast.makeText(getApplicationContext(),"IMAGE UPLOADed",Toast.LENGTH_SHORT).show();
+                       msr.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                           @Override
+                           public void onSuccess(Uri uri) {
+                               finalDr.child( inc+"").setValue(uri.toString())
+                                       .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                           @Override
+                                           public void onComplete(@NonNull Task<Void> task) {
+                                               if (inc == bitmaps.size() ) {
+                                                   progress.dismiss();
+                                                   Toast.makeText(getApplicationContext(),"IMAGE UPLOADed",Toast.LENGTH_SHORT).show();
 
-                       DatabaseReference finalDr = FirebaseDatabase.getInstance().getReference("post").child(city).child(userId).child("img");
-                       finalDr.child( "1").setValue(taskSnapshot.getUploadSessionUri());
-                      // Toast.makeText(getApplicationContext(),i+".."+bitmaps.size(),Toast.LENGTH_SHORT).show();
+                                                   Intent in = new Intent(getApplicationContext(), MainActivity.class);
+                                                   startActivity(in);
+                                                   finish();
+                                               }
+                                                    inc++;
+                                           }
+                                       });
+                           }
+                       });
 
-                       if (i == bitmaps.size() - 1) {
-                           progress.dismiss();
 
-                           Intent in = new Intent(getApplicationContext(), MainActivity.class);
-                           startActivity(in);
-                           finish();
-                       }
+
                    }
                }).addOnFailureListener(new OnFailureListener() {
                    @Override

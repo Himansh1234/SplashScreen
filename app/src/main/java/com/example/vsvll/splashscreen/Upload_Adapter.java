@@ -1,6 +1,7 @@
 package com.example.vsvll.splashscreen;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -15,20 +16,25 @@ import java.util.ArrayList;
 public class Upload_Adapter extends RecyclerView.Adapter<Upload_Adapter.ViewHolder> {
 
     ArrayList<Bitmap> bitmaps ;
+    ArrayList<Uri> uri ;
     Context context;
     RecyclerView recyclerView;
-    public Upload_Adapter(Context context,RecyclerView  recyclerView, ArrayList<Bitmap> bitmaps){
+    public Upload_Adapter(Context context,RecyclerView  recyclerView, ArrayList<Bitmap> bitmaps,ArrayList<Uri> uri){
         this.context=context;
         this.bitmaps=bitmaps;
+        this.uri=uri;
         this.recyclerView=recyclerView;
     }
     //jjj
 
-    void update(Bitmap bitmap){
+    void update(Bitmap bitmap,Uri imgUri){
         bitmaps.add(bitmap);
+        uri.add(imgUri);
         notifyDataSetChanged();
     }
-
+    ArrayList<Uri> getUri (){
+        return uri;
+    }
 
     @NonNull
     @Override
@@ -61,6 +67,7 @@ public class Upload_Adapter extends RecyclerView.Adapter<Upload_Adapter.ViewHold
                 public void onClick(View v) {
                     int i = recyclerView.getChildAdapterPosition(itemView);
                     bitmaps.remove(i);
+                    uri.remove(i);
                     notifyDataSetChanged();
                 }
             });
