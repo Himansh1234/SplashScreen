@@ -32,8 +32,10 @@ public class Upload_Adapter extends RecyclerView.Adapter<Upload_Adapter.ViewHold
         uri.add(imgUri);
         notifyDataSetChanged();
     }
-    ArrayList<Uri> getUri (){
-        return uri;
+
+
+    ArrayList<Bitmap> getUri (){
+        return bitmaps;
     }
 
     @NonNull

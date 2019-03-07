@@ -13,6 +13,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -51,10 +52,12 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 
 public class Upload_post extends AppCompatActivity implements LocationListener {
 
@@ -67,13 +70,15 @@ public class Upload_post extends AppCompatActivity implements LocationListener {
     LinearLayout layout;
     private static final String IMAGE_DIRECTORY = "/YourDirectName";
     private Context mContext;
-    ArrayList<Uri> bitmaps;
+    ArrayList<Bitmap> bitmaps;
     RecyclerView mRecyclerView;
     Upload_Adapter adapter;
     GridView gridView;
     ArrayAdapter<Bitmap> arrayAdapter;
     private int GALLERY = 1, CAMERA = 2;
     public int PERMISSIONS_MULTIPLE_REQUEST=1;
+    String name,address,descp,city_t;
+
 
     int i,success=1,inc=1;
     String city = null,userId;
@@ -195,6 +200,7 @@ public class Upload_post extends AppCompatActivity implements LocationListener {
                         Uri contentURI = data.getClipData().getItemAt(i).getUri();
                         try {
                             Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), contentURI);
+                            Toast.makeText(getApplicationContext(), "Image Saved!", Toast.LENGTH_SHORT).show();
                             ((Upload_Adapter) mRecyclerView.getAdapter()).update(bitmap,contentURI);
 
 
@@ -211,7 +217,7 @@ public class Upload_post extends AppCompatActivity implements LocationListener {
                     Uri uri = data.getData();
                     try {
                         Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
-                        Toast.makeText(getApplicationContext(), "Image Saved!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Image Saved!"+uri, Toast.LENGTH_SHORT).show();
                         ((Upload_Adapter) mRecyclerView.getAdapter()).update(bitmap,uri);
 
 
@@ -306,57 +312,26 @@ public class Upload_post extends AppCompatActivity implements LocationListener {
 
     void uploadData(){
 
-
-        Long ts =(System.currentTimeMillis());
-        String timestamp = ts.toString();
-        String date = DateFormat.format("dd-MM-yyyy HH:mm",ts).toString();
-
-
-
-        FirebaseUser user = mAuth.getCurrentUser();
-        assert user != null;
-
-         userId = timestamp+"_"+ user.getUid();
-
-
         EditText title = findViewById(R.id.upload_title);
         EditText add = findViewById(R.id.upload_address);
         EditText desc = findViewById(R.id.upload_desc);
         EditText cityy = findViewById(R.id.upload_city);
 
-        String name,address,descp,city_t;
         name = title.getText().toString();
         address = add.getText().toString();
         descp = desc.getText().toString();
         city = cityy.getText().toString().toLowerCase();
         city_t=cityy.getText().toString().toLowerCase();
 
+        bitmaps = ((Upload_Adapter) mRecyclerView.getAdapter()).getUri();
 
-
-
-
-
-       if(name.equals("")||address.equals("")||descp.isEmpty()||city_t.isEmpty())
+       if(name.equals("")||address.equals("")||descp.isEmpty()||city_t.isEmpty()||bitmaps.size()<=0)
        {
            Toast.makeText(getApplicationContext(),"FILL ALL REQUIRED DETAILS",Toast.LENGTH_SHORT).show();
        }
        else {
-           if(success==1) {
-               DatabaseReference dr = FirebaseDatabase.getInstance().getReference("post");
-               dr = dr.child(city_t).child(userId).child("detail");
-               dr.child("name").setValue(name);
-               dr.child("desc").setValue(descp);
-               dr.child("time").setValue(date);
-               dr.child("place").setValue(address);
-               dr.child("username").setValue(user.getDisplayName());
-               dr.child("city").setValue(city_t);
-               success=0;
-           }
-           bitmaps.clear();
-           bitmaps = ((Upload_Adapter) mRecyclerView.getAdapter()).getUri();
-           if(bitmaps.size()<=0) {
                uploadImg();
-           }
+
        }
 
     }
@@ -364,16 +339,42 @@ public class Upload_post extends AppCompatActivity implements LocationListener {
 
     void uploadImg(){
 
+        Long ts =(System.currentTimeMillis());
+        String timestamp = ts.toString();
+        final String date = DateFormat.format("dd-MM-yyyy HH:mm",ts).toString();
+
+
+
+        final FirebaseUser user = mAuth.getCurrentUser();
+        assert user != null;
+
+        userId = timestamp+"_"+ user.getUid();
+
            final ProgressDialog progress = new ProgressDialog(this);
            progress.setMessage("Loading.... ");
            progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+           progress.setCancelable(false);
            progress.show();
 
-            finalDr = finalDr.child(city).child(userId).child("img");
+        Bitmap bitmap;
+
+        finalDr = finalDr.child(city).child(userId).child("img");
 
            for( i=0;i < bitmaps.size();i++) {
-               final StorageReference msr = sr.child(userId).child(bitmaps.get(i).getLastPathSegment());
-           msr.putFile(bitmaps.get(i))
+
+             bitmap = bitmaps.get(i);
+             ByteArrayOutputStream out = new ByteArrayOutputStream();
+               if(sizeOfBitmap(bitmap)>1024*1000)
+               {
+                   bitmap.compress(Bitmap.CompressFormat.JPEG, 2, out);
+               }
+               else
+                   bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+
+               byte[] bytes = out.toByteArray();
+
+               final StorageReference msr = sr.child(userId).child((i+1)+".jpeg");
+           msr.putBytes(bytes)
              .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                    @Override
                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -386,6 +387,19 @@ public class Upload_post extends AppCompatActivity implements LocationListener {
                                            public void onComplete(@NonNull Task<Void> task) {
                                                if (inc == bitmaps.size() ) {
                                                    progress.dismiss();
+
+                                                   if(success==1) {
+                                                       DatabaseReference dr = FirebaseDatabase.getInstance().getReference("post");
+                                                       dr = dr.child(city_t).child(userId).child("detail");
+                                                       dr.child("name").setValue(name);
+                                                       dr.child("desc").setValue(descp);
+                                                       dr.child("time").setValue(date);
+                                                       dr.child("place").setValue(address);
+                                                       dr.child("username").setValue(user.getDisplayName());
+                                                       dr.child("city").setValue(city_t);
+                                                       success=0;
+                                                   }
+
                                                    Toast.makeText(getApplicationContext(),"IMAGE UPLOADed",Toast.LENGTH_SHORT).show();
 
                                                    Intent in = new Intent(getApplicationContext(), MainActivity.class);
@@ -411,6 +425,17 @@ public class Upload_post extends AppCompatActivity implements LocationListener {
            }
 
     }
+
+    public static int sizeOfBitmap(Bitmap data) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB_MR1) {
+            return data.getRowBytes() * data.getHeight();
+        } else if (Build.VERSION.SDK_INT< Build.VERSION_CODES.KITKAT){
+            return data.getByteCount();
+        } else{
+            return data.getAllocationByteCount();
+        }
+    }
+
     @Override
     public void onLocationChanged(Location location) {
         EditText addre =  findViewById(R.id.upload_address);
@@ -448,6 +473,14 @@ public class Upload_post extends AppCompatActivity implements LocationListener {
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
         //Log.d("Latitude","status");
+    }
+
+    @Override
+   public void onBackPressed(){
+        Intent in = new Intent(getApplicationContext(), MainActivity.class);
+        startActivity(in);
+        finish();
+
     }
 }
 

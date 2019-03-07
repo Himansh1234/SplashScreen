@@ -79,7 +79,10 @@ public class Posts extends AppCompatActivity {
                         .setValue(new ChatMessage(input.getText().toString(),
                                 FirebaseAuth.getInstance()
                                         .getCurrentUser()
-                                        .getDisplayName())
+                                        .getDisplayName()+"_/_"+FirebaseAuth.getInstance()
+                                        .getCurrentUser()
+                                        .getUid())
+
                         );
 
                 // Clear the input
@@ -102,7 +105,7 @@ public class Posts extends AppCompatActivity {
 
                 // Set their text
                 messageText.setText(getItem(position).getMessageText());
-                messageUser.setText(getItem(position).getMessageUser());
+                messageUser.setText(getItem(position).getMessageUser().substring(0,getItem(position).getMessageUser().indexOf("_")));
 
                 // Format the date before showing it
                 messageTime.setText(DateFormat.format("dd-MM-yyyy (HH:mm)",
@@ -110,12 +113,12 @@ public class Posts extends AppCompatActivity {
 
                 ImageButton delete = v.findViewById(R.id.message_delete);
 
-                if(model.getMessageUser().equals(FirebaseAuth.getInstance().getCurrentUser().getDisplayName())) {
+                if(model.getMessageUser().substring(model.getMessageUser().lastIndexOf("_")+1).equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
 
                     delete.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            FirebaseDatabase.getInstance().getReference("post").child("pune").child(postid).child("comment").
+                            FirebaseDatabase.getInstance().getReference("post").child(city).child(postid).child("comment").
                                     child(comment_adapter.getRef(position).getKey()).removeValue();
                         }
                     });

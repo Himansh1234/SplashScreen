@@ -1,15 +1,29 @@
 package com.example.vsvll.splashscreen;
 
 import android.Manifest;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.media.Image;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.ButtonBarLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -22,6 +36,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.example.vsvll.splashscreen.Data.LoginActivity;
@@ -38,9 +53,12 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements LocationListener, NavigationView.OnNavigationItemSelectedListener {
 
 
     ImageView DisplayImage;
@@ -53,7 +71,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     RecyclerView recyclerView;
     NewsFeed_Adapter newsFeed_adapter;
 
-    String CityName;
+    LocationManager locationManager;
+    private ProgressDialog pd;
+
+    String CityName="";
+
+    ArrayList<String> Cityarray = new ArrayList<>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +87,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setSupportActionBar(toolbar);
 
         mAuth = FirebaseAuth.getInstance();
+
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MY_PREFS_NAME", MODE_PRIVATE);
+        if(pref.getString("city","Z123").equals("Z123")){
+            getLocation();
+        }else{
+            CityName=pref.getString("city","Z123").toLowerCase();
+        }
+
 
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -141,6 +173,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onClick(View v) {
                 Intent in = new Intent(MainActivity.this,Upload_post.class);
                 startActivity(in);
+                finish();
             }
         });
         return true;
@@ -195,52 +228,229 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
 
-        dr.child("pune").addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 
-                try{
-                    wait(100);
-                }catch (Exception e){}
+            dr.child(CityName).addChildEventListener(new ChildEventListener() {
+                @Override
+                public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 
-                String id = dataSnapshot.getKey();
-                String username = dataSnapshot.child("detail").child("username").getValue(String.class);
-                String time = dataSnapshot.child("detail").child("time").getValue(String.class);
-                String name = dataSnapshot.child("detail").child("name").getValue(String.class);
-                String place = dataSnapshot.child("detail").child("place").getValue(String.class);
-                String city = dataSnapshot.child("detail").child("city").getValue(String.class);
-                String img = dataSnapshot.child("img").child("1").getValue(String.class);
+                    try {
+                        wait(100);
+                    } catch (Exception e) {
+                    }
 
-                Post_details p = new Post_details(id,username,name,img,place,city,time+"");
-                newsFeed_adapter.update(p);
+                    String id = dataSnapshot.getKey();
+                    String username = dataSnapshot.child("detail").child("username").getValue(String.class);
+                    String time = dataSnapshot.child("detail").child("time").getValue(String.class);
+                    String name = dataSnapshot.child("detail").child("name").getValue(String.class);
+                    String place = dataSnapshot.child("detail").child("place").getValue(String.class);
+                    String city = dataSnapshot.child("detail").child("city").getValue(String.class);
+                    String img = dataSnapshot.child("img").child("1").getValue(String.class);
+
+                    Post_details p = new Post_details(id, username, name, img, place, city, time + "");
+                    newsFeed_adapter.update(p);
+                    newsFeed_adapter.notifyDataSetChanged();
+
+
+                }
+
+                @Override
+                public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                    newsFeed_adapter.notifyDataSetChanged();
+                }
+
+                @Override
+                public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+                }
+
+                @Override
+                public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+
+
+
+    }
+
+
+
+    void getLocation() {
+
+        checkLocation();
+
+    }
+
+
+    private void checkLocation() {
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0,this);
+            if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+
+                new AlertDialog.Builder(this)
+                        .setMessage("Please activate your GPS Location!")
+                        .setCancelable(false)
+                        .setPositiveButton("Settings", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                Intent i = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                                startActivity(i);
+                            }
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            }
+
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions, @NonNull int[] grantResults) {
+
+        switch (requestCode) {
+            case 1:
+                if (grantResults.length > 0) {
+                    boolean loc_fine = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+
+                    if (loc_fine) {
+
+                        pd = new ProgressDialog(MainActivity.this);
+                        pd.setMessage("loading...");
+                        pd.setIndeterminate(true);
+                        pd.setCancelable(false);
+                        pd.show();
+
+                    } else {
+                        Toast.makeText(this, "Please Give Permission", Toast.LENGTH_SHORT).show();
+
+                    }
+                }
+
+                break;
+        }
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+
+        String cityName = null;
+        Geocoder gcd = new Geocoder(getApplicationContext(),
+                Locale.getDefault());
+        List<Address> addresses;
+        try {
+            addresses = gcd.getFromLocation(location.getLatitude(), location
+                    .getLongitude(), 1);
+            if (addresses.size() > 0) {
+                cityName = addresses.get(0).getLocality();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        CityName=cityName.toLowerCase();
+        SharedPreferences.Editor editor = getSharedPreferences("MY_PREFS_NAME", MODE_PRIVATE).edit();
+        editor.putString("city", cityName);
+        editor.commit();
+        pd.dismiss();
+        locationManager.removeUpdates(this);
+
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+        //  Log.d("Latitude","disable");
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+        //  Log.d("Latitude","enable");
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+        //Log.d("Latitude","status");
+    }
+
+    @Override
+    protected  void onRestart() {
+
+        super.onRestart();
+
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MY_PREFS_NAME", MODE_PRIVATE);
+        if(pref.getString("city","Z123").equals("Z123")){
+            getLocation();
+        }else{
+
+            if( !pref.getString("city","Z123").equals(CityName)) {
+                CityName = pref.getString("city", "Z123").toLowerCase();
+                newsFeed_adapter.posts.clear();
+                newsFeed_adapter.notifyDataSetChanged();
+                getData();
+            }
+        }
+    }
+
+    @Override
+    protected  void onStart() {
+
+        super.onStart();
+
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MY_PREFS_NAME", MODE_PRIVATE);
+        if(pref.getString("city","Z123").equals("Z123")){
+            getLocation();
+        }else{
+
+            if( !pref.getString("city","Z123").equals(CityName)) {
+                CityName = pref.getString("city", "Z123").toLowerCase();
+                newsFeed_adapter.posts.clear();
                 newsFeed_adapter.notifyDataSetChanged();
 
 
+                fb = FirebaseDatabase.getInstance();
+                dr = fb.getReference("post");
+
+
+                dr.addChildEventListener(new ChildEventListener() {
+                    @Override
+                    public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                        Cityarray.add(dataSnapshot.getKey());
+                    }
+
+                    @Override
+                    public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                    }
+
+                    @Override
+                    public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+                    }
+
+                    @Override
+                    public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+
+                if(Cityarray.contains(CityName))
+                getData();
+                else
+                    Toast.makeText(getApplicationContext(),"No Data Avaliable",Toast.LENGTH_SHORT).show();
             }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                newsFeed_adapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-
-
-
+        }
     }
 
 }
